@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endo Health — Blog Header Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --coral:  #E8715A;
+      --rose:   #F2B5A0;
+      --plum:   #6B2D4E;
+      --cream:  #FAF0E6;
+      --sage:   #8FAF8F;
+      --dark:   #2A1020;
+      --mid:    #7A4A5E;
+      --border: rgba(107,45,78,0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cream);
+      color: var(--dark);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* Setup */
+    #setup {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--plum) 0%, #8B3A63 55%, var(--coral) 100%);
+    }
+    .setup-card {
+      background: var(--cream); border-radius: 20px; padding: 40px;
+      max-width: 460px; width: 100%;
+      box-shadow: 0 24px 80px rgba(42,16,32,0.4);
+    }
+    .setup-logo {
+      font-family: 'Cormorant Garamond', serif; font-size: 28px;
+      font-weight: 300; color: var(--plum); margin-bottom: 6px;
+    }
+    .setup-sub { font-size: 13px; color: var(--mid); margin-bottom: 28px; line-height: 1.55; }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--mid); margin-bottom: 6px;
+    }
+    .field input {
+      width: 100%; border: 1px solid var(--border); border-radius: 10px;
+      padding: 11px 14px; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; color: var(--dark); background: white;
+      outline: none; transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--coral); }
+    .setup-note { font-size: 11px; color: rgba(122,74,94,0.6); margin-bottom: 24px; line-height: 1.7; }
+    .btn-primary {
+      width: 100%; background: var(--coral); color: white; border: none;
+      border-radius: 10px; padding: 14px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    #setup-error { color: #cc4444; font-size: 12px; margin-top: 12px; min-height: 18px; }
+
+    /* App */
+    #app { display: none; }
+
+    .site-header {
+      background: linear-gradient(135deg, var(--plum) 0%, #8B3A63 55%, var(--coral) 100%);
+      padding: 48px 48px 40px; position: relative; overflow: hidden;
+    }
+    .site-header::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 360px; height: 360px; border-radius: 50%;
+      background: rgba(232,113,90,0.25); filter: blur(60px);
+    }
+    .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .header-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rose); }
+    .header-eyebrow span { color: var(--rose); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; }
+    .site-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 4vw, 48px); font-weight: 300;
+      color: var(--cream); line-height: 1.15; margin-bottom: 10px;
+    }
+    .header-desc { color: rgba(250,240,230,0.65); font-size: 15px; max-width: 540px; line-height: 1.6; margin-bottom: 28px; }
+    .header-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .btn-generate {
+      background: var(--coral); color: white; border: none; border-radius: 10px;
+      padding: 12px 26px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-generate:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+    .btn-generate:disabled { opacity: 0.45; cursor: not-allowed; }
+    .counter-badge {
+      background: rgba(250,240,230,0.12); border: 1px solid rgba(250,240,230,0.2);
+      border-radius: 10px; padding: 10px 18px; color: var(--cream); font-size: 13px;
+    }
+    .counter-badge strong { font-size: 20px; font-weight: 600; }
+    .btn-reset {
+      background: transparent; border: 1px solid rgba(250,240,230,0.3);
+      color: rgba(250,240,230,0.6); border-radius: 8px; padding: 8px 14px;
+      font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-reset:hover { border-color: rgba(250,240,230,0.6); color: var(--cream); }
+    .progress-wrap { margin-top: 20px; display: none; }
+    .progress-wrap.visible { display: block; }
+    .progress-label { color: rgba(250,240,230,0.65); font-size: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .progress-track { height: 3px; background: rgba(250,240,230,0.15); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--coral); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+
+    .filters { padding: 22px 48px 0; max-width: 1100px; margin: 0 auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--mid);
+      border-radius: 20px; padding: 6px 16px;
+      font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--plum); color: var(--plum); }
+    .filter-btn.active { background: var(--plum); color: var(--cream); border-color: var(--plum); }
+
+    .gallery {
+      padding: 24px 48px 64px; max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px;
+    }
+
+    .card {
+      background: white; border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(107,45,78,0.06);
+      transition: transform 0.22s, box-shadow 0.22s;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .card.clickable { cursor: pointer; }
+    .card.clickable:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(107,45,78,0.14); }
+
+    .card-image { height: 176px; position: relative; overflow: hidden; background: linear-gradient(135deg, #F2B5A0, #EDD5C0); }
+    .card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .pulse-ring {
+      width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(107,45,78,0.15);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pulse-ring::after { content: ''; width: 18px; height: 18px; border-radius: 50%; background: rgba(107,45,78,0.1); }
+    .loading-overlay {
+      position: absolute; inset: 0; background: rgba(107,45,78,0.84);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .loading-overlay.on { opacity: 1; }
+    .spinner {
+      width: 26px; height: 26px; border: 3px solid rgba(250,240,230,0.2);
+      border-top-color: var(--cream); border-radius: 50%; animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .step-label { color: var(--cream); font-size: 11px; letter-spacing: 0.06em; }
+    .badge {
+      position: absolute; top: 10px; left: 10px; color: white; border-radius: 6px;
+      padding: 3px 9px; font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase;
+    }
+    .badge-done { position: absolute; top: 10px; right: 10px; background: rgba(143,175,143,0.9); color: white; border-radius: 6px; padding: 3px 8px; font-size: 11px; }
+    .cat-impulse { background: var(--coral); }
+    .cat-wissen  { background: var(--sage); }
+    .cat-forschung { background: var(--plum); }
+
+    .card-body { padding: 15px 17px 17px; }
+    .card-num { font-size: 10px; color: rgba(122,74,94,0.45); letter-spacing: 0.15em; margin-bottom: 4px; }
+    .card-title { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; color: var(--dark); line-height: 1.35; margin-bottom: 7px; }
+    .card-concept { font-size: 12px; color: var(--mid); line-height: 1.55; font-style: italic; margin-bottom: 11px; display: none; }
+    .card-concept.on { display: block; }
+    .card-error { font-size: 11px; color: #cc4444; background: #fff0f0; border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; display: none; }
+    .card-error.on { display: block; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .btn-small {
+      background: transparent; border: 1px solid var(--coral); color: var(--coral);
+      border-radius: 7px; padding: 5px 12px; font-family: 'DM Sans', sans-serif;
+      font-size: 11px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-small:hover { background: var(--coral); color: white; }
+    .card-hint { font-size: 11px; color: var(--sage); }
+
+    /* Modal */
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(42,16,32,0.88); backdrop-filter: blur(10px);
+      z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-bg.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--cream); border-radius: 20px; max-width: 640px; width: 100%;
+      overflow: hidden; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(42,16,32,0.45);
+      transform: translateY(14px); transition: transform 0.25s;
+    }
+    .modal-bg.open .modal { transform: translateY(0); }
+    .modal-img-wrap { height: 220px; position: relative; overflow: hidden; }
+    .modal-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(42,16,32,0.72) 0%, transparent 55%); }
+    .modal-img-info { position: absolute; bottom: 18px; left: 22px; right: 52px; }
+    .modal-img-info .cat {
+      display: inline-block; color: white; border-radius: 6px; padding: 3px 9px;
+      font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 7px;
+    }
+    .modal-img-info h2 { font-family: 'Cormorant Garamond', serif; color: white; font-size: 19px; font-weight: 400; line-height: 1.3; }
+    .modal-close {
+      position: absolute; top: 12px; right: 12px; background: rgba(42,16,32,0.5);
+      border: none; color: white; width: 30px; height: 30px; border-radius: 50%;
+      font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-body { padding: 22px; }
+    .modal-section { margin-bottom: 18px; }
+    .modal-lbl { font-size: 10px; color: rgba(122,74,94,0.55); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 500; margin-bottom: 7px; }
+    .modal-concept { font-style: italic; color: var(--dark); font-size: 14px; line-height: 1.6; }
+    .prompt-box { background: rgba(107,45,78,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; font-size: 12px; color: var(--mid); line-height: 1.75; }
+    .modal-dl {
+      display: inline-flex; align-items: center; gap: 8px; background: var(--plum); color: white;
+      border-radius: 10px; padding: 10px 20px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      text-decoration: none; font-weight: 500; transition: opacity 0.15s;
+    }
+    .modal-dl:hover { opacity: 0.85; }
+
+    @media (max-width: 640px) {
+      .site-header, .gallery, .filters { padding-left: 20px; padding-right: 20px; }
+      .gallery { grid-template-columns: 1fr; }
+      .setup-card { padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-logo">Endo Health</div>
+    <p class="setup-sub">Blog Header Generator — gib deinen OpenAI API Key ein. GPT-4o entwirft die Prompts, DALL-E 3 generiert die Bilder.</p>
+    <div class="field">
+      <label>OpenAI API Key</label>
+      <input type="password" id="openaiKey" placeholder="sk-...">
+    </div>
+    <p class="setup-note">
+      Der Key wird nur im sessionStorage deines Browsers gespeichert — nichts wird an einen eigenen Server gesendet.<br><br>
+      Kosten: ca. $0.04 pro Bild (DALL-E 3) + $0.01 fuer alle 10 Prompts (GPT-4o).
+    </p>
+    <button class="btn-primary" onclick="startApp()">Weiter</button>
+    <p id="setup-error"></p>
+  </div>
+</div>
+
+<div id="app">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-eyebrow">
+        <div class="eyebrow-dot"></div>
+        <span>Endo Health — AI Blog Headers</span>
+      </div>
+      <h1>Blog Header<br>Image Generator</h1>
+      <p class="header-desc">GPT-4o entwirft markenkonsistente Bild-Prompts — DALL-E 3 generiert die echten Header-Bilder. Alle 10 im gleichen visuellen Stil.</p>
+      <div class="header-actions">
+        <button class="btn-generate" id="btnGen" onclick="generateAll()">
+          <span>&#10022;</span>
+          <span id="btnLabel">Alle 10 generieren</span>
+        </button>
+        <div class="counter-badge">
+          <strong id="doneCount">0</strong> / 10 generiert
+        </div>
+        <button class="btn-reset" onclick="resetKeys()">Keys aendern</button>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label">
+          <span id="progressTitle">Generiere...</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('Alle', this)">Alle</button>
+    <button class="filter-btn" onclick="setFilter('Impulse', this)">Impulse</button>
+    <button class="filter-btn" onclick="setFilter('Wissen & Tipps', this)">Wissen &amp; Tipps</button>
+    <button class="filter-btn" onclick="setFilter('Forschung', this)">Forschung</button>
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+</div>
+
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-img-wrap">
+      <img id="mImg" src="" alt="">
+      <div class="modal-img-overlay"></div>
+      <div class="modal-img-info">
+        <div class="cat" id="mCat"></div>
+        <h2 id="mTitle"></h2>
+      </div>
+      <button class="modal-close" onclick="closeModal()">x</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-lbl">Visuelles Konzept</div>
+        <p class="modal-concept" id="mConcept"></p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-lbl">DALL-E 3 Prompt</div>
+        <div class="prompt-box" id="mPrompt"></div>
+      </div>
+      <a id="mDl" class="modal-dl" target="_blank">Bild oeffnen / speichern</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var BLOGS = [
+  { id:1,  title:"Endometriose kennt kein Alter",                                        category:"Impulse" },
+  { id:2,  title:"Kuenstliche Wechseljahre: was steckt dahinter und was kannst du tun?", category:"Impulse" },
+  { id:3,  title:"Frueherkennung bei Endometriose",                                      category:"Wissen & Tipps" },
+  { id:4,  title:"Endometriose mit KI frueher erkennen",                                 category:"Wissen & Tipps" },
+  { id:5,  title:"Schmerztherapie bei Endometriose",                                     category:"Wissen & Tipps" },
+  { id:6,  title:"Autoimmunerkrankungen und Endometriose",                               category:"Forschung" },
+  { id:7,  title:"Biomarker und Endometriose",                                           category:"Forschung" },
+  { id:8,  title:"Sport bei Endometriose: 5 Vorteile",                                  category:"Wissen & Tipps" },
+  { id:9,  title:"Endometriose: Fakten statt Mythen",                                    category:"Wissen & Tipps" },
+  { id:10, title:"Achtsamkeit bei Endometriose",                                         category:"Impulse" }
+];
+
+var CAT_CLASS = {
+  "Impulse": "cat-impulse",
+  "Wissen & Tipps": "cat-wissen",
+  "Forschung": "cat-forschung"
+};
+
+var BRAND_SYSTEM = "You are the art director for Endo Health, a German digital health company focused on women's health (endometriosis, PMS, menopause). Brand colors: terracotta #E8715A, dusty rose #F2B5A0, deep plum #6B2D4E, cream #FAF0E6, sage #8FAF8F. Tone: warm, empowering, hopeful, never clinical. Write a DALL-E 3 image generation prompt: scene relevant to the blog topic, brand colors dominant, 2-3 sentences, always end with: Soft-focus editorial photography, warm terracotta and dusty-rose tones, natural window light, empowering and hopeful mood, wide letterbox crop with empty upper-third for headline overlay, no text in image. Return only valid JSON with keys image_prompt and visual_concept (one German sentence for the team).";
+
+var state = {};
+BLOGS.forEach(function(b) {
+  state[b.id] = { status: "idle", imageUrl: null, prompt: null, concept: null, error: null };
+});
+var currentFilter = "Alle";
+var running = false;
+
+function startApp() {
+  var key = document.getElementById("openaiKey").value.trim();
+  var errEl = document.getElementById("setup-error");
+  if (!key) {
+    errEl.style.cssText = "color:#cc4444;font-size:12px;margin-top:12px;display:block";
+    errEl.textContent = "Bitte den OpenAI API Key eingeben.";
+    return;
+  }
+  sessionStorage.setItem("ok", key);
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  renderGallery();
+}
+
+function resetKeys() {
+  sessionStorage.clear();
+  document.getElementById("app").style.display = "none";
+  document.getElementById("setup").style.display = "flex";
+  document.getElementById("openaiKey").value = "";
+}
+
+function renderGallery() {
+  var gallery = document.getElementById("gallery");
+  gallery.innerHTML = "";
+  var items = currentFilter === "Alle" ? BLOGS : BLOGS.filter(function(b) { return b.category === currentFilter; });
+  items.forEach(function(blog, i) {
+    var card = document.createElement("div");
+    card.id = "card-" + blog.id;
+    var s = state[blog.id];
+    card.className = "card" + (s.status === "done" ? " clickable" : "");
+    card.style.animationDelay = (i * 55) + "ms";
+    if (s.status === "done") {
+      (function(id) { card.onclick = function() { openModal(id); }; })(blog.id);
+    }
+    card.innerHTML = buildCardHTML(blog, s);
+    gallery.appendChild(card);
+  });
+  updateCounter();
+}
+
+function buildCardHTML(blog, s) {
+  var catCls = CAT_CLASS[blog.category] || "cat-forschung";
+  var img = s.imageUrl
+    ? '<img src="' + s.imageUrl + '" alt="">'
+    : '<div class="placeholder"><div class="pulse-ring"></div></div>';
+  var overlayOn = s.status === "loading" ? "on" : "";
+  var doneBadge = s.status === "done" ? '<div class="badge-done">ok</div>' : "";
+  var conceptOn = s.concept ? "on" : "";
+  var errorOn   = s.error   ? "on" : "";
+  var footer;
+  if (s.status === "idle" || s.status === "error") {
+    footer = '<button class="btn-small" onclick="event.stopPropagation();generateOne(' + blog.id + ')">Generieren</button>';
+  } else if (s.status === "done") {
+    footer = '<span class="card-hint">Klicken fuer Details</span><button class="btn-small" onclick="event.stopPropagation();regenerate(' + blog.id + ')">Neu</button>';
+  } else {
+    footer = '<span style="font-size:11px;color:var(--mid)">Laeuft...</span>';
+  }
+  return '<div class="card-image">'
+    + img
+    + '<div class="loading-overlay ' + overlayOn + '" id="ov-' + blog.id + '">'
+    + '<div class="spinner"></div>'
+    + '<div class="step-label" id="step-' + blog.id + '">Generiere...</div>'
+    + '</div>'
+    + '<div class="badge ' + catCls + '">' + blog.category + '</div>'
+    + doneBadge
+    + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-num">Nr. ' + String(blog.id).padStart(2, "0") + '</div>'
+    + '<div class="card-title">' + blog.title + '</div>'
+    + '<div class="card-error ' + errorOn + '">' + (s.error || "") + '</div>'
+    + '<div class="card-concept ' + conceptOn + '">' + (s.concept || "") + '</div>'
+    + '<div class="card-footer">' + footer + '</div>'
+    + '</div>';
+}
+
+function updateCard(id) {
+  var blog = BLOGS.find(function(b) { return b.id === id; });
+  var s = state[id];
+  var card = document.getElementById("card-" + id);
+  if (!card) return;
+  card.className = "card" + (s.status === "done" ? " clickable" : "");
+  if (s.status === "done") {
+    (function(bid) { card.onclick = function() { openModal(bid); }; })(id);
+  } else {
+    card.onclick = null;
+  }
+  card.innerHTML = buildCardHTML(blog, s);
+  updateCounter();
+}
+
+function updateCounter() {
+  var done = Object.values(state).filter(function(s) { return s.status === "done"; }).length;
+  document.getElementById("doneCount").textContent = done;
+}
+
+function setFilter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
+  renderGallery();
+}
+
+async function gpt4oPrompt(blog) {
+  var key = sessionStorage.getItem("ok");
+  var res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      max_tokens: 512,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: BRAND_SYSTEM },
+        { role: "user", content: "Blog title: " + blog.title + " | Category: " + blog.category }
+      ]
+    })
+  });
+  if (!res.ok) {
+    var err = await res.json();
+    throw new Error(err.error ? err.error.message : "OpenAI error " + res.status);
+  }
+  var data = await res.json();
+  return JSON.parse(data.choices[0].message.content);
+}
+
+async function dalleImage(prompt) {
+  var key = sessionStorage.getItem("ok");
+  var res = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+    body: JSON.stringify({ model: "dall-e-3", prompt: prompt, size: "1792x1024", quality: "standard", n: 1 })
+  });
+  if (!res.ok) {
+    var err = await res.json();
+    throw new Error(err.error ? err.error.message : "OpenAI error " + res.status);
+  }
+  var data = await res.json();
+  return data.data[0].url;
+}
+
+async function generateOne(id) {
+  var blog = BLOGS.find(function(b) { return b.id === id; });
+  state[id] = { status: "loading", imageUrl: null, prompt: null, concept: null, error: null };
+  updateCard(id);
+  try {
+    var stepEl = document.getElementById("step-" + id);
+    if (stepEl) stepEl.textContent = "GPT-4o: Prompt...";
+    var result = await gpt4oPrompt(blog);
+    if (stepEl) stepEl.textContent = "DALL-E 3: Bild...";
+    var url = await dalleImage(result.image_prompt);
+    state[id] = { status: "done", imageUrl: url, prompt: result.image_prompt, concept: result.visual_concept, error: null };
+  } catch(e) {
+    state[id] = { status: "error", imageUrl: null, prompt: null, concept: null, error: e.message };
+  }
+  updateCard(id);
+}
+
+async function generateAll() {
+  if (running) return;
+  running = true;
+  document.getElementById("btnGen").disabled = true;
+  document.getElementById("btnLabel").textContent = "Laeuft...";
+  document.getElementById("progressWrap").classList.add("visible");
+  var todo = BLOGS.filter(function(b) { return state[b.id].status !== "done"; });
+  for (var i = 0; i < todo.length; i++) {
+    document.getElementById("progressTitle").textContent = todo[i].title;
+    var pct = Math.round((i / todo.length) * 100);
+    document.getElementById("progressFill").style.width = pct + "%";
+    document.getElementById("progressPct").textContent = pct + "%";
+    await generateOne(todo[i].id);
+  }
+  document.getElementById("progressFill").style.width = "100%";
+  document.getElementById("progressPct").textContent = "100%";
+  document.getElementById("progressTitle").textContent = "Fertig!";
+  document.getElementById("btnGen").disabled = false;
+  document.getElementById("btnLabel").textContent = "Alle neu generieren";
+  running = false;
+}
+
+async function regenerate(id) {
+  state[id] = { status: "idle", imageUrl: null, prompt: null, concept: null, error: null };
+  updateCard(id);
+  await generateOne(id);
+}
+
+function openModal(id) {
+  var blog = BLOGS.find(function(b) { return b.id === id; });
+  var s = state[id];
+  var catCls = CAT_CLASS[blog.category] || "cat-forschung";
+  document.getElementById("mImg").src = s.imageUrl;
+  document.getElementById("mTitle").textContent = blog.title;
+  document.getElementById("mCat").textContent = blog.category;
+  document.getElementById("mCat").className = "cat " + catCls;
+  document.getElementById("mConcept").textContent = s.concept;
+  document.getElementById("mPrompt").textContent = s.prompt;
+  document.getElementById("mDl").href = s.imageUrl;
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById("modal") || e.target.classList.contains("modal-close")) {
+    document.getElementById("modal").classList.remove("open");
+  }
+}
+
+if (sessionStorage.getItem("ok")) {
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  renderGallery();
+}
+</script>
+</body>
+</html>
